@@ -281,7 +281,7 @@ textarea { resize: none; height: 80px; }
     <div class="field field-full">
       <label>Фото визитки / бейджа</label>
       <div class="photo-area" id="photoArea">
-        <input type="file" accept="image/*" capture="environment" id="photoInput" onchange="handlePhoto(event)">
+        <input type="file" accept="image/*" id="photoInput" onchange="handlePhoto(event)">
         <div class="photo-icon">📷</div>
         <div class="photo-label">Нажмите, чтобы сфотографировать<br>или загрузить из галереи</div>
         <img class="photo-preview" id="photoPreview" alt="">
@@ -414,6 +414,40 @@ function validate() {
   return ok;
 }
 
+// --- Загрузка фото через JSONP ---
+function uploadPhoto(dataUrl, name) {
+  return new Promise((resolve, reject) => {
+    const callbackName = 'photoCb_' + Date.now();
+    const script = document.createElement('script');
+    const timer = setTimeout(() => {
+      delete window[callbackName];
+      try { document.head.removeChild(script); } catch(e) {}
+      reject(new Error('timeout'));
+    }, 10000);
+
+    window[callbackName] = function(data) {
+      clearTimeout(timer);
+      delete window[callbackName];
+      try { document.head.removeChild(script); } catch(e) {}
+      if (data && data.url) resolve(data.url);
+      else reject(new Error('no url'));
+    };
+
+    script.onerror = () => {
+      clearTimeout(timer);
+      delete window[callbackName];
+      try { document.head.removeChild(script); } catch(e) {}
+      reject(new Error('script error'));
+    };
+
+    const encoded = encodeURIComponent(dataUrl);
+    const nameEnc = encodeURIComponent(name || 'photo');
+    script.src = SCRIPT_URL + '?action=uploadPhoto&callback=' + callbackName
+      + '&name=' + nameEnc + '&photo=' + encoded;
+    document.head.appendChild(script);
+  });
+}
+
 // --- Submit — используем URL params (работает без CORS) ---
 async function submitForm() {
   if (!validate()) return;
@@ -437,8 +471,18 @@ async function submitForm() {
   });
 
   try {
-    // Отправляем с таймаутом 5 сек — no-cors не даёт читать ответ,
-    // поэтому просто ждём немного и считаем успехом
+    // Шаг 1: загружаем фото отдельно через JSONP если есть
+    let photoUrl = '';
+    if (photoDataUrl) {
+      try {
+        photoUrl = await uploadPhoto(photoDataUrl, params.get('name'));
+      } catch(e) {
+        console.warn('Фото не загрузилось:', e);
+      }
+    }
+    if (photoUrl) params.set('photo', photoUrl);
+
+    // Шаг 2: отправляем данные формы
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     try {
