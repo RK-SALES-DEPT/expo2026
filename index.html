@@ -30,6 +30,8 @@ body {
   min-height: 100vh;
   position: relative;
   box-shadow: 0 0 60px rgba(82,95,251,0.12);
+  display: flex;
+  flex-direction: column;
 }
 /* На десктопе — двухколоночная форма */
 @media (min-width: 600px) {
@@ -63,10 +65,12 @@ body {
   padding: 4px 10px; border-radius: 20px; text-transform: uppercase;
 }
 .bottom-nav {
-  position: sticky; bottom: 0; left: 0; right: 0;
+  position: fixed; bottom: 0; left: 50%; 
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 700px;
   background: #fff; border-top: 1px solid var(--border);
   display: flex; z-index: 50;
-  margin-top: auto;
 }
 .nav-btn {
   flex: 1; padding: 10px 0 8px;
@@ -426,7 +430,8 @@ async function submitForm() {
     email:    document.getElementById('email').value.trim(),
     interest: [...selectedChips].join(', '),
     comment:  document.getElementById('comment').value.trim(),
-    photo:    photoDataUrl || '',
+    // Фото не отправляем в URL — слишком большое, падает запрос
+    // photo сохраняется локально в превью
   });
 
   try {
