@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Robokassa — e-com expo 2026</title>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --blue: #525FFB;
+  --blue-dark: #3a46e8;
+  --blue-soft: #eef0ff;
+  --text: #1a1a2e;
+  --muted: #6b7280;
+  --border: #e2e4f0;
+  --bg: #f7f8ff;
+}
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #e8eaff;
+  min-height: 100vh;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+}
+.app-shell {
+  width: 100%;
+  max-width: 430px;
+  background: var(--bg);
+  min-height: 100vh;
+  position: relative;
+  box-shadow: 0 0 60px rgba(82,95,251,0.12);
+}
+.header {
+  background: var(--blue);
+  padding: 16px 20px 14px;
+  display: flex; align-items: center; gap: 10px;
+  position: sticky; top: 0; z-index: 50;
+}
+.header-logo { font-size: 20px; font-weight: 800; color: #fff; letter-spacing: -0.5px; }
+.header-logo span { opacity: 0.5; font-weight: 400; }
+.header-badge {
+  margin-left: auto;
+  background: rgba(255,255,255,0.18); border: 1px solid rgba(255,255,255,0.3);
+  color: #fff; font-size: 11px; font-weight: 600;
+  padding: 4px 10px; border-radius: 20px; text-transform: uppercase;
+}
+.bottom-nav {
+  position: sticky; bottom: 0; left: 0; right: 0;
+  background: #fff; border-top: 1px solid var(--border);
+  display: flex; z-index: 50;
+  margin-top: auto;
+}
+.nav-btn {
+  flex: 1; padding: 10px 0 8px;
+  display: flex; flex-direction: column; align-items: center; gap: 3px;
+  border: none; background: none; cursor: pointer;
+  color: var(--muted); font-size: 11px; font-weight: 500;
+  transition: color 0.15s;
+}
+.nav-btn .icon { font-size: 22px; line-height: 1; }
+.nav-btn.active { color: var(--blue); }
+.page { display: none; }
+.page.active { display: block; }
+.counter {
+  margin: 16px 16px 0;
+  background: var(--blue-soft); border-radius: 14px;
+  padding: 12px 16px; display: flex; align-items: center; justify-content: space-between;
+}
+.counter-label { font-size: 13px; font-weight: 600; color: var(--blue); }
+.counter-num { font-size: 26px; font-weight: 800; color: var(--blue); }
+.card {
+  background: #fff; border-radius: 20px;
+  margin: 14px 16px 0; padding: 24px 20px;
+  box-shadow: 0 2px 16px rgba(82,95,251,0.07);
+}
+.card-title { font-size: 18px; font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.card-subtitle { font-size: 13px; color: var(--muted); margin-bottom: 22px; }
+.field { margin-bottom: 15px; }
+label { display: block; font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 5px; }
+label .req { color: var(--blue); margin-left: 2px; }
+input, textarea, select {
+  width: 100%; padding: 13px 14px; font-size: 16px;
+  border: 1.5px solid var(--border); border-radius: 12px;
+  color: var(--text); background: #fff; outline: none;
+  transition: border-color 0.15s, box-shadow 0.15s;
+  -webkit-appearance: none; font-family: inherit;
+}
+input:focus, textarea:focus, select:focus {
+  border-color: var(--blue); box-shadow: 0 0 0 3px rgba(82,95,251,0.12);
+}
+input.error, select.error { border-color: #ef4444; }
+textarea { resize: none; height: 80px; }
+.error-msg { font-size: 12px; color: #ef4444; margin-top: 4px; display: none; }
+.error-msg.visible { display: block; }
+.chips { display: flex; flex-wrap: wrap; gap: 7px; }
+.chip {
+  padding: 6px 13px; border-radius: 20px; font-size: 13px; font-weight: 500;
+  border: 1.5px solid var(--border); color: var(--muted); background: #fff;
+  cursor: pointer; transition: all 0.15s; user-select: none;
+}
+.chip.active { background: var(--blue-soft); border-color: var(--blue); color: var(--blue); font-weight: 600; }
+.photo-area {
+  border: 2px dashed var(--border); border-radius: 14px;
+  padding: 20px; text-align: center; cursor: pointer;
+  transition: border-color 0.15s, background 0.15s; position: relative;
+}
+.photo-area:hover { border-color: var(--blue); background: var(--blue-soft); }
+.photo-area input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+.photo-icon { font-size: 32px; margin-bottom: 6px; }
+.photo-label { font-size: 13px; color: var(--muted); font-weight: 500; }
+.photo-preview { width: 100%; max-height: 180px; object-fit: contain; border-radius: 10px; margin-top: 10px; display: none; }
+.submit-btn {
+  width: 100%; background: var(--blue); color: #fff;
+  border: none; border-radius: 14px; padding: 15px;
+  font-size: 16px; font-weight: 700; cursor: pointer;
+  margin-top: 6px; transition: background 0.15s, transform 0.1s;
+}
+.submit-btn:active { transform: scale(0.98); }
+.submit-btn:hover { background: var(--blue-dark); }
+.submit-btn:disabled { opacity: 0.6; cursor: not-allowed; }
+.success-screen { display: none; flex-direction: column; align-items: center; text-align: center; padding: 40px 20px; }
+.success-screen.visible { display: flex; }
+.success-icon { font-size: 56px; margin-bottom: 16px; }
+.success-title { font-size: 22px; font-weight: 800; color: var(--text); margin-bottom: 6px; }
+.success-sub { font-size: 14px; color: var(--muted); margin-bottom: 24px; line-height: 1.6; white-space: pre-line; }
+.new-btn {
+  background: var(--blue-soft); color: var(--blue);
+  border: none; border-radius: 12px; padding: 14px 28px;
+  font-size: 15px; font-weight: 700; cursor: pointer;
+}
+/* DASHBOARD */
+.dash-header { margin: 16px 16px 0; display: flex; align-items: center; justify-content: space-between; }
+.dash-title { font-size: 18px; font-weight: 800; color: var(--text); }
+.refresh-btn {
+  background: none; border: 1.5px solid var(--border);
+  border-radius: 10px; padding: 6px 12px; font-size: 12px;
+  font-weight: 600; color: var(--muted); cursor: pointer;
+}
+.refresh-btn:hover { border-color: var(--blue); color: var(--blue); }
+.dash-total {
+  margin: 12px 16px 0; background: var(--blue); border-radius: 16px; padding: 18px 20px;
+  display: flex; align-items: center; justify-content: space-between; color: #fff;
+}
+.dash-total-label { font-size: 14px; font-weight: 600; opacity: 0.8; }
+.dash-total-num { font-size: 40px; font-weight: 900; line-height: 1; }
+.dash-total-sub { font-size: 12px; opacity: 0.65; margin-top: 2px; }
+.dash-card {
+  background: #fff; border-radius: 20px;
+  margin: 12px 16px 0; padding: 20px;
+  box-shadow: 0 2px 12px rgba(82,95,251,0.07);
+}
+.dash-card-title { font-size: 13px; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 14px; }
+.manager-row {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+}
+.manager-row:last-child { border-bottom: none; padding-bottom: 0; }
+.manager-rank {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--blue-soft); color: var(--blue);
+  font-size: 13px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.manager-info { flex: 1; min-width: 0; }
+.manager-name { font-size: 14px; font-weight: 600; color: var(--text); }
+.manager-bar-wrap { height: 4px; background: var(--border); border-radius: 2px; margin-top: 5px; }
+.manager-bar { height: 4px; background: var(--blue); border-radius: 2px; transition: width 0.6s ease; }
+.manager-count { font-size: 20px; font-weight: 800; color: var(--text); flex-shrink: 0; min-width: 30px; text-align: right; }
+.last-updated { text-align: center; font-size: 11px; color: var(--muted); margin-top: 10px; padding-bottom: 4px; }
+.dash-loading { text-align: center; padding: 30px 20px; font-size: 14px; color: var(--muted); }
+.toast {
+  position: fixed; bottom: 80px; left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #1a1a2e; color: #fff;
+  padding: 10px 18px; border-radius: 12px;
+  font-size: 13px; font-weight: 500; opacity: 0;
+  transition: all 0.25s; z-index: 200; white-space: nowrap;
+}
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+</style>
+</head>
+<body>
+<div class="app-shell">
+
+<div class="header">
+  <div class="header-logo">Robokassa <span>×</span> e‑com expo</div>
+  <div class="header-badge">2026</div>
+</div>
+
+<!-- СКРЫТЫЙ IFRAME для отправки формы без CORS -->
+<iframe name="hidden_iframe" id="hidden_iframe" style="display:none;"></iframe>
+
+<!-- PAGE: FORM -->
+<div class="page active" id="pageForm">
+  <div class="counter">
+    <span class="counter-label">Моих контактов сегодня</span>
+    <span class="counter-num" id="counterNum">0</span>
+  </div>
+
+  <div class="card" id="formCard">
+    <div class="card-title">Новый контакт</div>
+    <div class="card-subtitle">Заполните данные гостя стенда</div>
+
+    <div class="field">
+      <label>Менеджер <span class="req">*</span></label>
+      <select id="manager">
+        <option value="">— выберите себя —</option>
+        <option>Улитин Василий</option>
+        <option>Ким Сергей</option>
+        <option>Микерина Ксения</option>
+        <option>Прасолова Алина</option>
+        <option>Салибекян Степан</option>
+        <option>Певнева Юлия</option>
+      </select>
+      <div class="error-msg" id="managerErr">Выберите менеджера</div>
+    </div>
+
+    <div class="field">
+      <label>Имя гостя <span class="req">*</span></label>
+      <input type="text" id="name" placeholder="Иван Петров" autocomplete="off">
+      <div class="error-msg" id="nameErr">Введите имя</div>
+    </div>
+
+    <div class="field">
+      <label>Компания и должность <span class="req">*</span></label>
+      <input type="text" id="company" placeholder="ООО Ромашка, директор" autocomplete="off">
+      <div class="error-msg" id="companyErr">Введите компанию</div>
+    </div>
+
+    <div class="field">
+      <label>Телефон <span class="req">*</span></label>
+      <input type="tel" id="phone" placeholder="+7 999 000-00-00" autocomplete="off">
+      <div class="error-msg" id="phoneErr">Введите телефон</div>
+    </div>
+
+    <div class="field">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="ivan@company.ru" autocomplete="off">
+    </div>
+
+    <div class="field">
+      <label>Интерес / запрос</label>
+      <div class="chips" id="chips">
+        <div class="chip" data-value="Приём платежей">💳 Приём платежей</div>
+        <div class="chip" data-value="Рассрочка">📦 Рассрочка</div>
+        <div class="chip" data-value="Касса / 54-ФЗ">🧾 Касса / 54-ФЗ</div>
+        <div class="chip" data-value="Холдирование">🔒 Холдирование</div>
+        <div class="chip" data-value="Маркетплейс">🏪 Маркетплейс</div>
+        <div class="chip" data-value="API / интеграция">⚙️ API</div>
+        <div class="chip" data-value="Ин. карты">🌍 Ин. карты</div>
+        <div class="chip" data-value="Партнёрство">🤝 Партнёрство</div>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Фото визитки / бейджа</label>
+      <div class="photo-area" id="photoArea">
+        <input type="file" accept="image/*" capture="environment" id="photoInput" onchange="handlePhoto(event)">
+        <div class="photo-icon">📷</div>
+        <div class="photo-label">Нажмите, чтобы сфотографировать<br>или загрузить из галереи</div>
+        <img class="photo-preview" id="photoPreview" alt="">
+      </div>
+    </div>
+
+    <div class="field">
+      <label>Комментарий</label>
+      <textarea id="comment" placeholder="Заметки, договорённости..."></textarea>
+    </div>
+
+    <button class="submit-btn" id="submitBtn" onclick="submitForm()">Сохранить контакт</button>
+  </div>
+
+  <div class="card success-screen" id="successScreen">
+    <div class="success-icon">✅</div>
+    <div class="success-title">Контакт сохранён!</div>
+    <div class="success-sub" id="successName"></div>
+    <button class="new-btn" onclick="resetForm()">+ Следующий гость</button>
+  </div>
+</div>
+
+<!-- PAGE: DASHBOARD -->
+<div class="page" id="pageDash">
+  <div class="dash-header">
+    <div class="dash-title">Дашборд</div>
+    <button class="refresh-btn" onclick="loadDashboard()">🔄 Обновить</button>
+  </div>
+  <div class="dash-total">
+    <div>
+      <div class="dash-total-label">Всего лидов сегодня</div>
+      <div class="dash-total-num" id="dashTotal">—</div>
+      <div class="dash-total-sub" id="dashUpdated">Загружаю...</div>
+    </div>
+    <div style="font-size:48px;">🏆</div>
+  </div>
+  <div class="dash-card">
+    <div class="dash-card-title">Рейтинг менеджеров</div>
+    <div id="managerList"><div class="dash-loading">Загружаю данные...</div></div>
+  </div>
+  <div class="last-updated" id="lastUpdated"></div>
+</div>
+
+<!-- BOTTOM NAV -->
+<div class="bottom-nav">
+  <button class="nav-btn active" id="navForm" onclick="switchPage('form')">
+    <span class="icon">📋</span><span>Форма</span>
+  </button>
+  <button class="nav-btn" id="navDash" onclick="switchPage('dash')">
+    <span class="icon">📊</span><span>Дашборд</span>
+  </button>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZikfx4Jv17oy2HEsZpUhpvPGqJAWIskVErfiL-0pIvKIzRmHuQYokuLxvU52VWJ7zOQ/exec";
+// ============================================================
+
+let selectedChips = new Set();
+let photoDataUrl  = null;
+let dashInterval  = null;
+
+// --- Counter ---
+function getCount() {
+  const mgr = document.getElementById('manager').value;
+  if (!mgr) return 0;
+  return parseInt(localStorage.getItem('expoCount_' + mgr) || '0');
+}
+function incCount(mgr) {
+  const key = 'expoCount_' + mgr;
+  const n = parseInt(localStorage.getItem(key) || '0') + 1;
+  localStorage.setItem(key, n);
+  document.getElementById('counterNum').textContent = n;
+}
+document.getElementById('manager').addEventListener('change', function() {
+  document.getElementById('counterNum').textContent = getCount();
+});
+
+// --- Chips ---
+document.querySelectorAll('.chip').forEach(chip => {
+  chip.addEventListener('click', () => {
+    const v = chip.dataset.value;
+    if (selectedChips.has(v)) { selectedChips.delete(v); chip.classList.remove('active'); }
+    else { selectedChips.add(v); chip.classList.add('active'); }
+  });
+});
+
+// --- Photo ---
+function handlePhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  // Сжимаем фото перед отправкой
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 800;
+      let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      photoDataUrl = canvas.toDataURL('image/jpeg', 0.7);
+      const prev = document.getElementById('photoPreview');
+      prev.src = photoDataUrl; prev.style.display = 'block';
+      document.querySelector('.photo-icon').textContent = '✅';
+      document.querySelector('.photo-label').textContent = 'Фото добавлено';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// --- Validate ---
+function validate() {
+  let ok = true;
+  [{ id:'manager', err:'managerErr' },
+   { id:'name',    err:'nameErr' },
+   { id:'company', err:'companyErr' },
+   { id:'phone',   err:'phoneErr' }].forEach(f => {
+    const el = document.getElementById(f.id);
+    const er = document.getElementById(f.err);
+    if (!el.value.trim()) { el.classList.add('error'); er.classList.add('visible'); ok = false; }
+    else { el.classList.remove('error'); er.classList.remove('visible'); }
+  });
+  return ok;
+}
+
+// --- Submit — используем URL params (работает без CORS) ---
+async function submitForm() {
+  if (!validate()) return;
+
+  const btn = document.getElementById('submitBtn');
+  btn.disabled = true;
+  btn.textContent = 'Сохраняю...';
+
+  const manager = document.getElementById('manager').value;
+  const params = new URLSearchParams({
+    timestamp: new Date().toLocaleString('ru-RU', { timeZone: 'Europe/Moscow' }),
+    manager,
+    name:     document.getElementById('name').value.trim(),
+    company:  document.getElementById('company').value.trim(),
+    phone:    document.getElementById('phone').value.trim(),
+    email:    document.getElementById('email').value.trim(),
+    interest: [...selectedChips].join(', '),
+    comment:  document.getElementById('comment').value.trim(),
+    photo:    photoDataUrl || '',
+  });
+
+  try {
+    // Отправляем через no-cors GET (скрипт принимает и GET и POST)
+    await fetch(SCRIPT_URL + '?' + params.toString(), {
+      method: 'GET',
+      mode: 'no-cors',
+    });
+
+    // Небольшая пауза чтобы скрипт успел записать
+    await new Promise(r => setTimeout(r, 1200));
+
+    incCount(manager);
+    document.getElementById('formCard').style.display = 'none';
+    const s = document.getElementById('successScreen');
+    s.classList.add('visible');
+    document.getElementById('successName').textContent =
+      document.getElementById('name').value.trim() + '\n' +
+      document.getElementById('company').value.trim() + '\n' +
+      '👤 ' + manager;
+
+  } catch(e) {
+    showToast('⚠️ Ошибка сети. Попробуй ещё раз.');
+    btn.disabled = false;
+    btn.textContent = 'Сохранить контакт';
+  }
+}
+
+// --- Reset ---
+function resetForm() {
+  ['name','company','phone','email','comment'].forEach(id => document.getElementById(id).value = '');
+  selectedChips.clear();
+  document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
+  photoDataUrl = null;
+  const prev = document.getElementById('photoPreview');
+  prev.style.display = 'none'; prev.src = '';
+  document.querySelector('.photo-icon').textContent = '📷';
+  document.querySelector('.photo-label').textContent = 'Нажмите, чтобы сфотографировать\nили загрузить из галереи';
+  document.getElementById('submitBtn').disabled = false;
+  document.getElementById('submitBtn').textContent = 'Сохранить контакт';
+  document.getElementById('successScreen').classList.remove('visible');
+  document.getElementById('formCard').style.display = '';
+  document.getElementById('counterNum').textContent = getCount();
+  window.scrollTo(0,0);
+}
+
+// --- Page switch ---
+function switchPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  if (page === 'form') {
+    document.getElementById('pageForm').classList.add('active');
+    document.getElementById('navForm').classList.add('active');
+    if (dashInterval) { clearInterval(dashInterval); dashInterval = null; }
+  } else {
+    document.getElementById('pageDash').classList.add('active');
+    document.getElementById('navDash').classList.add('active');
+    loadDashboard();
+    dashInterval = setInterval(loadDashboard, 30000);
+  }
+}
+
+// --- Dashboard ---
+async function loadDashboard() {
+  document.getElementById('managerList').innerHTML = '<div class="dash-loading">⏳ Загружаю...</div>';
+  try {
+    // no-cors не даёт читать ответ, поэтому используем jsonp-трюк через script tag
+    const data = await fetchStats();
+    renderDashboard(data);
+  } catch(e) {
+    console.error('Dashboard error:', e);
+    document.getElementById('managerList').innerHTML =
+      '<div class="dash-loading">⚠️ Ошибка загрузки.<br>Нажми «Обновить»<br><small>' + e.message + '</small></div>';
+  }
+}
+
+function fetchStats() {
+  return new Promise((resolve, reject) => {
+    // Используем script-tag trick для обхода CORS
+    const callbackName = 'cb_' + Date.now();
+    const script = document.createElement('script');
+
+    window[callbackName] = function(data) {
+      delete window[callbackName];
+      document.head.removeChild(script);
+      resolve(data);
+    };
+
+    script.onerror = () => {
+      delete window[callbackName];
+      document.head.removeChild(script);
+      // Fallback: попробуем обычный fetch
+      fetch(SCRIPT_URL + '?action=stats')
+        .then(r => r.json())
+        .then(resolve)
+        .catch(reject);
+    };
+
+    // Таймаут 8 секунд
+    setTimeout(() => {
+      if (window[callbackName]) {
+        delete window[callbackName];
+        try { document.head.removeChild(script); } catch(e) {}
+        // Fallback на обычный fetch
+        fetch(SCRIPT_URL + '?action=stats')
+          .then(r => r.json())
+          .then(resolve)
+          .catch(reject);
+      }
+    }, 8000);
+
+    script.src = SCRIPT_URL + '?action=stats&callback=' + callbackName;
+    document.head.appendChild(script);
+  });
+}
+
+function renderDashboard(data) {
+  document.getElementById('dashTotal').textContent = data.total || 0;
+  const now = new Date().toLocaleTimeString('ru-RU', { hour:'2-digit', minute:'2-digit' });
+  document.getElementById('dashUpdated').textContent = 'обновлено в ' + now;
+  document.getElementById('lastUpdated').textContent = 'Автообновление каждые 30 сек';
+
+  const sorted = [...(data.managers || [])].sort((a,b) => b.count - a.count);
+  const max = sorted[0]?.count || 1;
+  const medals = ['🥇','🥈','🥉'];
+
+  let html = '';
+  sorted.forEach((m, i) => {
+    const label = i < 3 ? medals[i] : (i + 1);
+    const pct = Math.round((m.count / max) * 100);
+    html += `
+      <div class="manager-row">
+        <div class="manager-rank">${label}</div>
+        <div class="manager-info">
+          <div class="manager-name">${m.name}</div>
+          <div class="manager-bar-wrap">
+            <div class="manager-bar" style="width:${pct}%"></div>
+          </div>
+        </div>
+        <div class="manager-count">${m.count}</div>
+      </div>`;
+  });
+  document.getElementById('managerList').innerHTML =
+    html || '<div class="dash-loading">Данных пока нет</div>';
+}
+
+// --- Toast ---
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+</script>
+</div>
+</body>
+</html>
