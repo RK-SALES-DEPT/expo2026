@@ -25,11 +25,28 @@ body {
 }
 .app-shell {
   width: 100%;
-  max-width: 430px;
+  max-width: 700px;
   background: var(--bg);
   min-height: 100vh;
   position: relative;
   box-shadow: 0 0 60px rgba(82,95,251,0.12);
+}
+/* На десктопе — двухколоночная форма */
+@media (min-width: 600px) {
+  .card { padding: 28px 32px; }
+  .fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0 20px;
+  }
+  .field-full { grid-column: 1 / -1; }
+  .counter { margin: 20px 24px 0; }
+  .card { margin: 16px 24px 0; }
+  .dash-total { margin: 14px 24px 0; }
+  .dash-card { margin: 14px 24px 0; }
+  .dash-header { margin: 20px 24px 0; }
+  .last-updated { padding-bottom: 8px; }
+  .submit-btn { margin-top: 12px; }
 }
 .header {
   background: var(--blue);
@@ -202,7 +219,9 @@ textarea { resize: none; height: 80px; }
     <div class="card-title">Новый контакт</div>
     <div class="card-subtitle">Заполните данные гостя стенда</div>
 
-    <div class="field">
+    <div class="fields-grid">
+
+    <div class="field field-full">
       <label>Менеджер <span class="req">*</span></label>
       <select id="manager">
         <option value="">— выберите себя —</option>
@@ -239,7 +258,7 @@ textarea { resize: none; height: 80px; }
       <input type="email" id="email" placeholder="ivan@company.ru" autocomplete="off">
     </div>
 
-    <div class="field">
+    <div class="field field-full">
       <label>Интерес / запрос</label>
       <div class="chips" id="chips">
         <div class="chip" data-value="Приём платежей">💳 Приём платежей</div>
@@ -253,7 +272,7 @@ textarea { resize: none; height: 80px; }
       </div>
     </div>
 
-    <div class="field">
+    <div class="field field-full">
       <label>Фото визитки / бейджа</label>
       <div class="photo-area" id="photoArea">
         <input type="file" accept="image/*" capture="environment" id="photoInput" onchange="handlePhoto(event)">
@@ -263,9 +282,11 @@ textarea { resize: none; height: 80px; }
       </div>
     </div>
 
-    <div class="field">
+    <div class="field field-full">
       <label>Комментарий</label>
       <textarea id="comment" placeholder="Заметки, договорённости..."></textarea>
+    </div>
+
     </div>
 
     <button class="submit-btn" id="submitBtn" onclick="submitForm()">Сохранить контакт</button>
