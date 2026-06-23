@@ -438,9 +438,18 @@ async function uploadPhoto(dataUrl, name) {
     );
   }
   await Promise.all(promises);
-  // Пауза чтобы скрипт успел собрать все чанки
-  await new Promise(r => setTimeout(r, 2000));
-  return uid; // возвращаем uid, скрипт соберёт чанки и загрузит на Drive
+
+  // Опрашиваем скрипт каждые 2 сек пока не получим ссылку (макс 30 сек)
+  for (let attempt = 0; attempt < 15; attempt++) {
+    await new Promise(r => setTimeout(r, 2000));
+    try {
+      const checkUrl = SCRIPT_URL + '?action=checkPhoto&uid=' + encodeURIComponent(uid);
+      const res = await fetch(checkUrl);
+      const data = await res.json();
+      if (data && data.url) return data.url; // ссылка готова!
+    } catch(e) {}
+  }
+  return ''; // не дождались
 }
 
 // --- Submit — используем URL params (работает без CORS) ---
@@ -470,8 +479,8 @@ async function submitForm() {
     if (photoDataUrl) {
       btn.textContent = 'Загружаю фото...';
       try {
-        const uid = await uploadPhoto(photoDataUrl, params.get('name'));
-        if (uid) params.set('photoUid', uid);
+        const photoUrl = await uploadPhoto(photoDataUrl, params.get('name'));
+        if (photoUrl) params.set('photo', photoUrl);
       } catch(e) {
         console.warn('Фото не загрузилось:', e);
       }
