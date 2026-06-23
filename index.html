@@ -417,10 +417,12 @@ function validate() {
 // --- Загрузка фото через JSONP (можно читать ответ) ---
 // Загружаем фото чанками через несколько GET запросов
 async function uploadPhoto(dataUrl, name) {
-  const CHUNK = 5000; // 5000 символов за раз
+  const CHUNK = 50000; // 50000 символов за раз — ~8-10 запросов вместо 100
   const total = Math.ceil(dataUrl.length / CHUNK);
   const uid   = Date.now() + '_' + Math.random().toString(36).substr(2,5);
 
+  // Отправляем все чанки параллельно
+  const promises = [];
   for (let i = 0; i < total; i++) {
     const chunk = dataUrl.substring(i * CHUNK, (i + 1) * CHUNK);
     const params = new URLSearchParams({
@@ -430,14 +432,14 @@ async function uploadPhoto(dataUrl, name) {
       total: String(total),
       data: chunk,
     });
-    try {
-      await fetch(SCRIPT_URL + '?' + params.toString(), {
-        method: 'GET', mode: 'no-cors',
-      });
-    } catch(e) {}
-    // Небольшая пауза между чанками
-    await new Promise(r => setTimeout(r, 300));
+    promises.push(
+      fetch(SCRIPT_URL + '?' + params.toString(), { method: 'GET', mode: 'no-cors' })
+        .catch(() => {})
+    );
   }
+  await Promise.all(promises);
+  // Пауза чтобы скрипт успел собрать все чанки
+  await new Promise(r => setTimeout(r, 2000));
   return uid; // возвращаем uid, скрипт соберёт чанки и загрузит на Drive
 }
 
