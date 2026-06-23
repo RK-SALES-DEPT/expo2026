@@ -143,6 +143,14 @@ textarea { resize: none; height: 80px; }
   border: none; border-radius: 12px; padding: 14px 28px;
   font-size: 15px; font-weight: 700; cursor: pointer;
 }
+.photo-btn {
+  background: #fff; color: var(--text);
+  border: 1.5px solid var(--border); border-radius: 12px;
+  padding: 12px 24px; font-size: 14px; font-weight: 600;
+  cursor: pointer; margin-bottom: 12px; width: 100%;
+  transition: border-color 0.15s;
+}
+.photo-btn:hover { border-color: var(--blue); color: var(--blue); }
 .card-checkbox {
   display: flex; align-items: center; gap: 12px;
   padding: 14px 16px; border: 1.5px solid var(--border);
@@ -330,6 +338,7 @@ textarea { resize: none; height: 80px; }
     <div class="success-icon">✅</div>
     <div class="success-title">Контакт сохранён!</div>
     <div class="success-sub" id="successName"></div>
+    <button class="photo-btn" id="photoFormBtn" onclick="openPhotoForm()">📷 Добавить фото визитки</button>
     <button class="new-btn" onclick="resetForm()">+ Следующий гость</button>
   </div>
 </div>
@@ -369,7 +378,11 @@ textarea { resize: none; height: 80px; }
 
 <script>
 // ============================================================
-const SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwZikfx4Jv17oy2HEsZpUhpvPGqJAWIskVErfiL-0pIvKIzRmHuQYokuLxvU52VWJ7zOQ/exec";
+const SCRIPT_URL  = "https://script.google.com/macros/s/AKfycbwZikfx4Jv17oy2HEsZpUhpvPGqJAWIskVErfiL-0pIvKIzRmHuQYokuLxvU52VWJ7zOQ/exec";
+// ⬇️ Вставь сюда ссылку на Google Форму после создания
+const PHOTO_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSdlWvUfJaeZX5E9sd97caU-xbvVJnsO2TADkAujHpZ4FbbSwg/viewform";
+// ID поля "Имя гостя" в Google Форме (получишь после создания)
+const PHOTO_FORM_NAME_FIELD = "entry.1111173105";
 // ============================================================
 
 let selectedChips = new Set();
@@ -490,6 +503,18 @@ async function submitForm() {
     btn.disabled = false;
     btn.textContent = 'Сохранить контакт';
   }
+}
+
+// --- Открыть Google Форму для фото ---
+function openPhotoForm() {
+  if (PHOTO_FORM_URL === 'ВСТАВЬ_ССЫЛКУ_НА_GOOGLE_ФОРМУ') {
+    alert('Google Форма ещё не подключена');
+    return;
+  }
+  const name = document.getElementById('name').value.trim() ||
+                document.getElementById('successName').textContent.split('\n')[0];
+  const url  = PHOTO_FORM_URL + '?' + PHOTO_FORM_NAME_FIELD + '=' + encodeURIComponent(name);
+  window.open(url, '_blank');
 }
 
 // --- Reset ---
