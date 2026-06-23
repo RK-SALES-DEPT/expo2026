@@ -415,53 +415,30 @@ function validate() {
 }
 
 // --- Загрузка фото через JSONP (можно читать ответ) ---
-function uploadPhoto(dataUrl, name) {
-  return new Promise((resolve) => {
-    const cbName = 'photoCb_' + Date.now();
-    const form   = document.createElement('form');
-    form.method  = 'POST';
-    form.action  = SCRIPT_URL + '?action=uploadPhoto&callback=' + cbName;
-    form.target  = 'photo_iframe';
-    form.style.display = 'none';
+// Загружаем фото чанками через несколько GET запросов
+async function uploadPhoto(dataUrl, name) {
+  const CHUNK = 5000; // 5000 символов за раз
+  const total = Math.ceil(dataUrl.length / CHUNK);
+  const uid   = Date.now() + '_' + Math.random().toString(36).substr(2,5);
 
-    // Создаём скрытый iframe для получения ответа
-    let iframe = document.getElementById('photo_iframe');
-    if (!iframe) {
-      iframe = document.createElement('iframe');
-      iframe.name = 'photo_iframe';
-      iframe.id   = 'photo_iframe';
-      iframe.style.display = 'none';
-      document.body.appendChild(iframe);
-    }
-
-    // Callback который вызовет скрипт
-    window[cbName] = function(data) {
-      delete window[cbName];
-      clearTimeout(timer);
-      resolve(data && data.url ? data.url : '');
-    };
-
-    // Таймаут 15 сек
-    const timer = setTimeout(() => {
-      delete window[cbName];
-      resolve('');
-    }, 15000);
-
-    // Передаём данные через hidden input
-    const addField = (n, v) => {
-      const inp = document.createElement('input');
-      inp.type = 'hidden'; inp.name = n; inp.value = v;
-      form.appendChild(inp);
-    };
-    addField('action', 'uploadPhoto');
-    addField('callback', cbName);
-    addField('name', name || 'photo');
-    addField('photo', dataUrl);
-
-    document.body.appendChild(form);
-    form.submit();
-    setTimeout(() => document.body.removeChild(form), 1000);
-  });
+  for (let i = 0; i < total; i++) {
+    const chunk = dataUrl.substring(i * CHUNK, (i + 1) * CHUNK);
+    const params = new URLSearchParams({
+      action: 'photoChunk',
+      uid, name: name || 'photo',
+      chunk: String(i),
+      total: String(total),
+      data: chunk,
+    });
+    try {
+      await fetch(SCRIPT_URL + '?' + params.toString(), {
+        method: 'GET', mode: 'no-cors',
+      });
+    } catch(e) {}
+    // Небольшая пауза между чанками
+    await new Promise(r => setTimeout(r, 300));
+  }
+  return uid; // возвращаем uid, скрипт соберёт чанки и загрузит на Drive
 }
 
 // --- Submit — используем URL params (работает без CORS) ---
@@ -487,19 +464,19 @@ async function submitForm() {
   });
 
   try {
-    // Шаг 1: загружаем фото и получаем ссылку
+    // Шаг 1: загружаем фото чанками если есть
     if (photoDataUrl) {
       btn.textContent = 'Загружаю фото...';
       try {
-        const photoUrl = await uploadPhoto(photoDataUrl, params.get('name'));
-        if (photoUrl) params.set('photo', photoUrl);
+        const uid = await uploadPhoto(photoDataUrl, params.get('name'));
+        if (uid) params.set('photoUid', uid);
       } catch(e) {
         console.warn('Фото не загрузилось:', e);
       }
     }
     btn.textContent = 'Сохраняю...';
 
-    // Шаг 2: отправляем данные формы со ссылкой на фото
+    // Шаг 2: отправляем контакт (скрипт соберёт фото по uid и вставит ссылку)
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), 5000);
     try {
